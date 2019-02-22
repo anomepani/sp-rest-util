@@ -1,0 +1,14 @@
+{
+    "name": "sp-rest-util",
+    "version": "1.0.0",
+    "description": "This Repo created for learning purpose to request Easily in Sharepoint REST API/ MSGraph API",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "anomepani",
+    "license": "ISC",
+    "dependencies": {
+        "node-fetch": "^2.3.0"
+    }
+}
