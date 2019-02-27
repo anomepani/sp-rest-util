@@ -5,10 +5,12 @@ This Repo created for learning purpose to request Easily in Sharepoint REST API/
 // Pre-requisite
 var rootUrl="https://brgroup.sharepoint.com";
 var reqUrl="https://brgroup.sharepoint.com/_api/web/lists/getbytitle('AWSResponseList')/items"
-//Here "type" is meta type which internally used and passed in request for preparing sharepoint meta type
+//Here "type" is meta type which internally used and passed in request for preparing sharepoint
+//meta type
 // and "title" is name of list title you want while creation which should be unique
 // metaInfo={type:"List",title:"List Created with minimal info"},
-// In payload for request "postWithRequestDigest" I have passed extra param "rootUrl" which require internally to get request digest.
+// In payload for request "postWithRequestDigest" I have passed extra param "rootUrl" which
+// require internally to get request digest.
 
 // ===============================================================
 // * FETCH ALL SHAREPOINT LIST ITEM USING REST UTIL
