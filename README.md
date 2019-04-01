@@ -2,6 +2,25 @@
 This Repo created for learning purpose to request Easily in Sharepoint REST API/ MSGraph API
 
 ```js
+
+//Troubleshoots Possible error and its resolution
+
+// body is not in stringify => "Invalid JSON. A token was not recognized in the JSON content."
+// Request URI is not exist=> "Cannot find resource for the request list."
+// While Create or Update Operation List Title,Field is already exist with name => "A list, survey, discussion board, or document library with the specified title already exists in this Web site.  Please choose another title."
+// Failed to execute 'fetch' on 'Window': Request with GET/HEAD method cannot have body =>  This was due to this utility method, I have passed body in GET Request which is not supported.
+// the type SP.ListCollection does not support HTTP PATCH method => While Creating new List/List Item if Http-Method is "Merge" this error occurs
+
+// Errror : An unexpected 'StartObject' node was found when reading from the JSON reader. A 'PrimitiveValue' node was expected.
+
+// solution: If Body have json payload then first apply stringify on that data and then again stringify whole body
+
+// Column 'title' does not exist. It may have been deleted by another user.
+
+// Solution: column is case sensetive in Sharepoint pass exact Column name meaning "Title"
+
+
+
 // Pre-requisite
 var rootUrl="https://brgroup.sharepoint.com";
 var reqUrl="https://brgroup.sharepoint.com/_api/web/lists/getbytitle('AWSResponseList')/items"

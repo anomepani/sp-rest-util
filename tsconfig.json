@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "strict": false,
+       //"module": "esnext", 
+       "module": "commonjs",
+       "moduleResolution": "classic",
+        "watch": true,
+    
+    },
+    "compileOnSave": true
+}

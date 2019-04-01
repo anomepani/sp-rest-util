@@ -1,8 +1,7 @@
-"use strict";
 /**
  * Reference or motivation link : https://github.com/omkarkhair/sp-jello/blob/master/lib/jello.js
  */
-exports.__esModule = true;
+
 //var fetch = require("node-fetch");
 // TODO- Need to transform this json to closure function to allow only get operation.
 //TODO  - Need to add support for Field Meta in utils
@@ -21,55 +20,62 @@ var spDefaultMeta = {
         'Description': 'My doc. lib. description',
         'Title': 'Test'
     },
-    "ListItem": { "__metadata": { "type": "SP.Data.AWSResponseListListItem" }, "Title": "Test" }
-};
-var spRestUtils = (function () {
-    var isOdataVerbose = true;
-    var _rootUrl = '';
+    "SitePagesItem":{
+    "__metadata":{
+    "type": "SP.Data.SitePagesItem"
+}},
+
+    "ListItem": { "__metadata": { "type": "SP.Data.AWSResponseListListItem" }, "Title": "Test" },
+}
+const spRestUtils= (() => {
+    let isOdataVerbose = true;
+    let _rootUrl = '';
     //Here "Accept" and "Content-Type" header must require for Sharepoint Onlin REST API
-    var _payloadOptions = {
-        method: 'GET',
-        body: undefined,
-        headers: { credentials: "include", "Accept": "application/json; odata=verbose", "Content-Type": "application/json; odata=verbose" }
-    };
-    // TODO- To support for param base odata
-    //No to fetch Metadata, response only requested data.
-    // Reference link https://www.microsoft.com/en-us/microsoft-365/blog/2014/08/13/json-light-support-rest-sharepoint-api-released/
-    //Option 1: verbose “accept: application/json; odata=verbose”
-    //Option 2: minimalmetadata “accept: application/json; odata=minimalmetadata”
-    //Option 3: nometadata “accept: application/json; odata=nometadata”
-    //Option 4: Don’t provide it “accept: application/json” This defaults to minimalmetadata option
+    let _payloadOptions = {
+            method: 'GET',
+            body:undefined,
+            headers: { credentials: "include","Accept": "application/json; odata=verbose", "Content-Type": "application/json; odata=verbose" }
+        }
+        // TODO- To support for param base odata
+        //No to fetch Metadata, response only requested data.
+        // Reference link https://www.microsoft.com/en-us/microsoft-365/blog/2014/08/13/json-light-support-rest-sharepoint-api-released/
+        //Option 1: verbose “accept: application/json; odata=verbose”
+        //Option 2: minimalmetadata “accept: application/json; odata=minimalmetadata”
+        //Option 3: nometadata “accept: application/json; odata=nometadata”
+        //Option 4: Don’t provide it “accept: application/json” This defaults to minimalmetadata option
     if (!isOdataVerbose) {
-        _payloadOptions.headers.Accept = "application/json; odata=nometadata";
+        _payloadOptions.headers.Accept = "application/json; odata=nometadata"
     }
     // Reference from :https://www.tjvantoll.com/2015/09/13/fetch-and-errors/
+
     //Reference rom : https://sharepoint.stackexchange.com/questions/105380/adding-new-list-item-using-rest
+
     // Get List Item Type metadata
-    var getItemTypeForListName = function (name) {
+    const getItemTypeForListName = (name) => {
         return "SP.Data." + name.charAt(0).toUpperCase() + name.split(" ").join("").slice(1) + "ListItem";
-    };
-    var Get = function (url) {
+    }
+    const Get = (url) => {
         var _localPayload = _payloadOptions;
         _localPayload.method = "GET";
         //Internally if body is set for GET request then need to remove it by setting undefined
         // otherwise it return with error : Failed to execute 'fetch' on 'Window': Request with GET/HEAD method cannot have body
         _localPayload.body = undefined;
         console.log(_localPayload);
-        return fetch(url, _localPayload).then(function (r) { return r.json(); });
+        return fetch(url, _localPayload).then(r => r.json());
     };
-    var getRequestDigest = function (url) {
+    const getRequestDigest = (url) => {
         var _localPayload = _payloadOptions;
         _localPayload.method = "POST";
-        return fetch(url, _localPayload).then(function (r) { return r.json(); });
+        return fetch(url, _localPayload).then(r => r.json());
     };
-    var postWithRequestDigest = function (url, payload) {
-        return getRequestDigest(payload.rootUrl + "/_api/contextinfo").then(function (token) {
+    const postWithRequestDigest = (url, payload) => {
+        return getRequestDigest(payload.rootUrl + "/_api/contextinfo").then(token => {
             payload.requestDigest = token.d.GetContextWebInformation.FormDigestValue;
             return Post(url, payload);
-        });
-    };
-    var updateWithRequestDigest = function (url, payload) {
-        return getRequestDigest(payload.rootUrl + "/_api/contextinfo").then(function (token) {
+        })
+    }
+    const updateWithRequestDigest = (url, payload) => {
+        return getRequestDigest(payload.rootUrl + "/_api/contextinfo").then(token => {
             payload.requestDigest = token.d.GetContextWebInformation.FormDigestValue;
             payload._extraHeaders = {
                 "IF-MATCH": "*",
@@ -78,32 +84,35 @@ var spRestUtils = (function () {
             //For Update operation or Merge Operation no response will return only status will return for http request
             payload.isNoJsonResponse = true;
             return Post(url, payload);
-        });
-    };
-    var Post = function (url, payload) {
+        })
+    }
+    const Post = (url, payload) => {
         var _localPayload = _payloadOptions;
         // TODO For Safety this method can be wrapped with request Digest so always get token.
         // But need to ensure it request only when request digest is expired.
         _localPayload.method = "POST";
         _localPayload.body = payload.data;
-        var _metaInfo = payload.metaInfo;
+        let _metaInfo = payload.metaInfo;
         //Pre validation Check Before update body or meta detail
         if (_metaInfo && spDefaultMeta[_metaInfo.type]) {
             //Update Title and Description while creating new List/Column/Fields
-            var type = _metaInfo.type, title = _metaInfo.title, listName = _metaInfo.listName;
-            var _body = spDefaultMeta[type];
+            let { type, title, listName } = _metaInfo;
+            let _body = spDefaultMeta[type];
             if (title) {
                 //Update title if it is present in metaInfo
                 _body.Title = title;
             }
+
+
             if (type === "ListItem") {
                 //TODO Extra Efforts
+
                 _body.__metadata.type = getItemTypeForListName(listName);
             }
             //If Extra fields are present then store to payload
             //Before Stringify ,store extra fields/columns in body
             if (payload.extraFields) {
-                for (var field in payload.extraFields) {
+                for (let field in payload.extraFields) {
                     //Add all extra columns in body
                     // TODO- Need to ensure that column value is stringify
                     _body[field] = payload.extraFields[field];
@@ -114,40 +123,45 @@ var spRestUtils = (function () {
             //Pass body data as stringyfy;
             _localPayload.body = JSON.stringify(_body);
             _localPayload.body.Title = title;
+
+
         }
         //If Extra header is present in payload for update or other operation, Append to existing header
         if (payload._extraHeaders) {
             for (var _header in payload._extraHeaders) {
                 _localPayload.headers[_header] = payload._extraHeaders[_header];
             }
-        }
-        else {
+        } else {
             //IF Not present that means it is POST Request, reset Extraheader for this request
+
             _localPayload.headers["IF-MATCH"] = undefined;
             _localPayload.headers["X-HTTP-Method"] = undefined;
         }
+
         _localPayload.headers["X-RequestDigest"] = payload.requestDigest;
+
         console.log(_localPayload);
         //TODO- Naming convention can be updated.
         if (payload.isNoJsonResponse) {
-            return fetch(url, _localPayload).then(function (r) { return r; });
+            return fetch(url, _localPayload).then(r => r);
+        } else {
+            return fetch(url, _localPayload).then(r => r.json());
         }
-        else {
-            return fetch(url, _localPayload).then(function (r) { return r.json(); });
-        }
+
     };
-    var Put = function (url, payload) {
+    const Put = (url, payload) => {
         var _localPayload = _payloadOptions;
         _localPayload.method = "PUT";
         _localPayload.body = payload.data;
-        return fetch(url, _payloadOptions).then(function (r) { return r.json(); });
+        return fetch(url, _payloadOptions).then(r => r.json());
     };
-    var Delete = function (url, payload) {
+    const Delete = (url, payload) => {
         var _localPayload = _payloadOptions;
         _localPayload.method = "DELETE";
         _localPayload.body = payload.data;
-        return fetch(url, _payloadOptions).then(function (r) { return r.json(); });
+        return fetch(url, _payloadOptions).then(r => r.json());
     };
-    return { Get: Get, Post: Post, getRequestDigest: getRequestDigest, postWithRequestDigest: postWithRequestDigest, updateWithRequestDigest: updateWithRequestDigest };
+    return { Get: Get, Post: Post, getRequestDigest: getRequestDigest, postWithRequestDigest: postWithRequestDigest, updateWithRequestDigest: updateWithRequestDigest }
 })();
-exports["default"] = spRestUtils;
+
+export default spRestUtils;
