@@ -1,6 +1,11 @@
 # sp-rest-util
-This Repo created for learning purpose to request Easily in Sharepoint REST API/ MSGraph API
+This Repo created for learning purpose to request Easily in Sharepoint REST API
 
+I have upgraded Rest utils with name `SPRest.ts` or `SPRest.js` which covers CRUD with List Item easily.
+
+Usage of  `SPRest.ts` or `SPRest.js` is described on [C-SharpCorner Article](https://www.c-sharpcorner.com/article/easy-sharepoint-listitem-crud-operation-using-rest-api-wrapper/)
+
+## Below Configuration and usage for Old Util  `spRestUtils.js`
 ```js
 
 //Troubleshoots Possible error and its resolution
