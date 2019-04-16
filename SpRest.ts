@@ -7,10 +7,13 @@ class SPRest {
   Utils = (() => {
     /**
      * Reference or motivation link : https://github.com/omkarkhair/sp-jello/blob/master/lib/jello.js
+     * https://github.com/abhishekseth054/SharePoint-Rest
+     * https://github.com/gunjandatta/sprest
      */
     var reqUrl =
       this.rootUrl + "/_api/web/lists/getbytitle('AWSResponseList')/items";
     //var fetch = require("node-fetch");
+
     // TODO- Need to transform this json to closure function to allow only get operation.
     //TODO  - Need to add support for Field Meta in utils
     var spDefaultMeta = {
@@ -236,8 +239,198 @@ class SPRest {
         return fetch(url, _localPayload).then(r => r.json());
       }
     };
+    /**
+     * Generate GUID in javascript
+     * Reference from : https://github.com/andrewconnell/sp-o365-rest/blob/master/SpRestBatchSample/Scripts/App.js
+     */
+    function generateUUID() {
+      var d = new Date().getTime();
+      var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+        /[xy]/g,
+        function (c) {
+          var r = (d + Math.random() * 16) % 16 | 0;
+          d = Math.floor(d / 16);
+          return (c == "x" ? r : (r & 0x7) | 0x8).toString(16);
+        }
+      );
+      return uuid;
+    }
+    /**
+ * Prepare batch request in Sharepoint Online
+ * Reference from : https://github.com/andrewconnell/sp-o365-rest/blob/master/SpRestBatchSample/Scripts/App.js
+ */
+    const GenerateBatchRequest = ({
+      listName = "",
+      data,
+      DigestValue = "",
+      action = "ADD",
+      itemIds = []
+    }) => {
+      // generate a batch boundary
+      var batchGuid = generateUUID();
+      // creating the body
+      var batchContents = new Array();
+      var changeSetId = generateUUID();
+      // get current host
+      // var temp = document.createElement('a');
+      // temp.href = this.rootUrl;
+      // var host = temp.hostname;
+      // iterate through each employee
+      ////TODO NEED TO SEPARATE BATCH OPERATION CREATION FOR ADD,UPDATE and DELETE OPERATION
+      // MIXED INSERT and UPDATE Operation
+      // MIXED ISERT ,UPDATE and DELETE Operation
+      for (var _index = 0; _index < data.length; _index++) {
+        //TODO for payload or "data"  need to generate or extract metadata based on type and batch action
+        var _item = data[_index];
+        if (action === "UPDATE") {
+          _item.Title = "##Updated_" + _item.Title;
+        }
+        //Generate and prepare request url for each item
+        switch (action) {
+          case "ADD":
+            var endpoint = generateRestRequest({ listName, type: "ListItem" });
+            break;
+          case "UPDATE":
+            var endpoint = generateRestRequest({
+              listName,
+              type: "ListItem",
+              Id: itemIds[_index]
+            });
+            _item.Title += _index;
+            break;
+          case "DELETE":
+            var endpoint = generateRestRequest({
+              listName,
+              type: "ListItem",
+              Id: itemIds[_index]
+            });
+            break;
+        }
+        // create the request endpoint
 
-    const generateRestRequest = ({ listName = "", Id = "", type }) => {
+        // create the changeset
+        batchContents.push("--changeset_" + changeSetId);
+        batchContents.push("Content-Type: application/http");
+        batchContents.push("Content-Transfer-Encoding: binary");
+        batchContents.push("");
+        if (action === "UPDATE") {
+          batchContents.push("PATCH " + endpoint + " HTTP/1.1");
+          batchContents.push("If-Match: *");
+          batchContents.push("Content-Type: application/json;odata=verbose");
+          batchContents.push("");
+          batchContents.push(JSON.stringify(_item));
+        } else if (action === "ADD") {
+          batchContents.push("POST " + endpoint + " HTTP/1.1");
+          batchContents.push("Content-Type: application/json;odata=verbose");
+          batchContents.push("");
+          batchContents.push(JSON.stringify(_item));
+        } else if (action === "DELETE") {
+          batchContents.push("DELETE " + endpoint + " HTTP/1.1");
+          batchContents.push("If-Match: *");
+        }
+        //Commented POST request line and added code for UPDATE as well
+        // batchContents.push("POST " + endpoint + " HTTP/1.1");
+        // batchContents.push("Content-Type: application/json;odata=verbose");
+        // batchContents.push("");
+        // batchContents.push(JSON.stringify(_item));
+        batchContents.push("");
+      }
+      // END changeset to create data
+      batchContents.push("--changeset_" + changeSetId + "--");
+
+      // batch body
+      var batchBody = batchContents.join("\r\n");
+
+      batchContents = [];
+
+      // create batch for creating items
+      batchContents.push("--batch_" + batchGuid);
+      batchContents.push(
+        'Content-Type: multipart/mixed; boundary="changeset_' +
+        changeSetId +
+        '"'
+      );
+      batchContents.push("Content-Length: " + batchBody.length);
+      batchContents.push("Content-Transfer-Encoding: binary");
+      batchContents.push("");
+      batchContents.push(batchBody);
+      batchContents.push("");
+
+      // create request in batch to get all items after all are created
+      ////Commented below endpoint as we are utilizing same endpoint without orderby
+      // endpoint = _this.rootUrl +
+      //     "/_api/web/lists/getbytitle('" + listName + "')" +
+      //     '/items?$orderby=Title';
+
+      // batchContents.push('--batch_' + batchGuid);
+      // batchContents.push('Content-Type: application/http');
+      // batchContents.push('Content-Transfer-Encoding: binary');
+      // batchContents.push('');
+      //COmmented below lines of code as I don't need to request GET after insertion
+      // batchContents.push('GET ' + endpoint + ' HTTP/1.1');
+      // batchContents.push('Accept: application/json;odata=verbose');
+      // batchContents.push('');
+
+      batchContents.push("--batch_" + batchGuid + "--");
+
+      batchBody = batchContents.join("\r\n");
+
+      // create the request endpoint
+      var batchEndpoint = this.rootUrl + "/_api/$batch";
+
+      // var batchRequestHeader = {
+      //     'X-RequestDigest': DigestValue,
+      //     'Content-Type': 'multipart/mixed; boundary="batch_' + batchGuid + '"'
+      // };
+      return getRequestDigest().then(r => {
+        //SPECIAL CASE IS BATCH REQUEST MODE
+        var batchRequestHeader = {
+          "X-RequestDigest": r.d.GetContextWebInformation.FormDigestValue,
+          "Content-Type": 'multipart/mixed; boundary="batch_' + batchGuid + '"'
+        };
+        return fetch(batchEndpoint, {
+          method: "POST",
+          headers: batchRequestHeader,
+          body: batchBody
+        }).then(r => r.text());
+      });
+
+      //return PostExtension(batchEndpoint,{headers:batchRequestHeader,payload:batchBody})
+      //fetch(batchEndpoint,{method:'POST',headers:batchRequestHeader,body:batchBody}).then(r=>r.text()).then(r=>console.log(r))
+      //OLD CODE Commented
+      // create request
+      // jQuery.ajax({
+      //     url: endpoint,
+      //     type: 'POST',
+      //     headers: batchRequestHeader,
+      //     data: batchBody,
+      //     success: function(response) {
+
+      //         var responseInLines = response.split('\n');
+
+      //         //  $("#tHead").append("<tr><th>First Name</th><th>Last Name</th><th>Technology</th></tr>");
+
+      //         for (var currentLine = 0; currentLine < responseInLines.length; currentLine++) {
+      //             try {
+
+      //                 var tryParseJson = JSON.parse(responseInLines[currentLine]);
+
+      //                 console.log(tryParseJson);
+      //             } catch (e) {
+      //                 console.log("Error")
+      //             }
+      //         }
+      //     },
+      //     fail: function(error) {
+
+      //     }
+      // });
+    };
+
+    const generateRestRequest = ({ listName = "", Id = "", type, oDataOption = "", url = "" }) => {
+      if (url) {
+        return url;
+      }
       let prepareRequest = `${this.rootUrl}/_api/web/lists`;
       switch (type) {
         case "ListItem":
@@ -245,12 +438,22 @@ class SPRest {
           if (Id) {
             prepareRequest += `(${Id})`;
           }
+          if (oDataOption) {
+            prepareRequest += `?${oDataOption}`;
+          }
           break;
         case "List":
           if (listName) {
             prepareRequest += `/getbytitle('${listName}')`;
           }
+          if (oDataOption) {
+            prepareRequest += `?${oDataOption}`;
+          }
           //TODO
+          break;
+        case "MSGraph":
+          //Special Case
+          prepareRequest = `${this.rootUrl}/_api/SP.OAuth.Token/Acquire`;
           break;
       }
       //OLDER Code for ListItem
@@ -263,28 +466,31 @@ class SPRest {
     };
     //Provide support for odata query so, for specific provided expression append it with base requet
     const ListItem = {
-      Add: ({  }: any) => {},
-      Update: ({  }: any) => {},
-      Delete: ({  }: any) => {},
-      GetItemById: ({  }: any) => {},
-      GetAllItem: ({  }: any) => {}
+      Add: ({ }: any) => { },
+      Update: ({ }: any) => { },
+      Delete: ({ }: any) => { },
+      GetItemById: ({ }: any) => { },
+      GetAllItem: ({ }: any) => { }
     };
     const List = {
-      Add: ({  }: any) => {},
-      Update: ({  }: any) => {
+      Add: ({ }: any) => { },
+      Update: ({ }: any) => {
         console.log("Implementation is pending");
       },
-      Delete: ({  }: any) => {
+      Delete: ({ }: any) => {
         console.log("Implementation is pending");
       },
-      GetItemById: ({  }: any) => {
+      GetByTitle: ({ }: any) => {
         console.log("Implementation is pending");
       },
-      GetAll: ({  }: any) => {}
+      GetAll: ({ }: any) => { }
     };
 
-    List.GetAll = () => {
-      return Get(generateRestRequest({ listName: "", type: "List" }));
+    List.GetAll = ({ oDataOption = "", url = "" }) => {
+      return Get(generateRestRequest({ listName: "", type: "List", oDataOption, url }));
+    };
+    List.GetByTitle = ({ listName, oDataOption, url }) => {
+      return Get(generateRestRequest({ listName: listName, type: "List", oDataOption, url }));
     };
     List.Add = ({ listName, data }) => {
       let _reqUrl = generateRestRequest({ listName, type: "List" });
@@ -297,12 +503,13 @@ class SPRest {
       return postWithRequestDigestExtension(_reqUrl, _prePayload);
     };
 
-    ListItem.GetAllItem = ({ listName }) => {
-      return Get(generateRestRequest({ listName, type: "ListItem" }));
+    ListItem.GetAllItem = ({ listName, oDataOption = "", url = "" }) => {
+
+      return Get(generateRestRequest({ listName, type: "ListItem", oDataOption, url }));
     };
 
-    ListItem.GetItemById = ({ listName, Id }) => {
-      return Get(generateRestRequest({ listName, Id, type: "ListItem" }));
+    ListItem.GetItemById = ({ listName, Id, oDataOption = "", url = "" }) => {
+      return Get(generateRestRequest({ listName, Id, type: "ListItem", oDataOption, url }));
     };
     // Add/Update/Delete require same types of metaData as well as payload only difference is Headers
 
@@ -403,7 +610,8 @@ class SPRest {
       getRequestDigest: getRequestDigest,
       Post: postWithRequestDigest,
       Update: updateWithRequestDigest,
-      Delete: deleteWithRequestDigest
+      Delete: deleteWithRequestDigest,
+      BatchInsert: GenerateBatchRequest
     };
   })();
 }
