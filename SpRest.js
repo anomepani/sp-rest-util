@@ -408,7 +408,7 @@ var SPRest = /** @class */ (function () {
                         break;
                     case "MSGraph":
                         //Special Case
-                        prepareRequest = _this.rootUrl + "/_api/SP.OAuth.Token/Acquire";
+                       
                         break;
                 }
                 //OLDER Code for ListItem
