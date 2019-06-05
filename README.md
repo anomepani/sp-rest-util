@@ -5,6 +5,60 @@ I have upgraded Rest utils with name `SPRest.ts` or `SPRest.js` which covers CRU
 
 Usage of  `SPRest.ts` or `SPRest.js` is described on [C-SharpCorner Article](https://www.c-sharpcorner.com/article/easy-sharepoint-listitem-crud-operation-using-rest-api-wrapper/)
 
+## Below Configuration and usage for Util `SPRest.ts` or `SPRest.js`
+
+```js
+var spRest=new SPRest("https://brgrp.sharepoint.com");
+
+// Get All Item from List item  
+spRest.Utils.ListItem.GetAllItem({listName:"PlaceHolderList"}).then(function(r){  
+console.log(r);  
+// Response received. TODO bind record to table or somewhere else.  
+});
+
+//Get all selected column Data using full URL  
+util.Utils.ListItem  
+.GetAllItem({  
+   url:"https://brgrp.sharepoint.com/_api/web/lists/getbytitle('PlaceHolderList')/items?$select=Id,Title&$top=200"  
+}).then(function(r){console.log(r);  
+//Response Received  
+});  
+  
+//Get all selected column data with listName and oDataOption  
+  
+util.Utils.ListItem.GetAllItem(  
+   {"listName":"PlaceHolderList"  
+      ,oDataOption:"$select=Id,Title&$top=200"  
+   }).then(function(r){console.log(r);  
+   //Response Received  
+});  
+
+// Get List Item By Id  
+spRest.Utils.ListItem.GetItemById({listName:"PlaceHolderList",Id:201}).then(function(r){    
+console.log(r);    
+// Response received.   
+});
+
+// Add ListItem to Sharepoint List  
+spRest.Utils.ListItem.Add({listName:"PlaceHolderList",data:{Title:"New Item Created For Demo",UserId:1,Completed:"true"}}).then(function(r){    
+console.log(r);    
+// Added New List item response received with newly created item  
+}); 
+
+// Update List item based on ID with new data in SharePoint List  
+spRest.Utils.ListItem.Update({listName:"PlaceHolderList",Id:201,data:{Title:"Updated List Item",UserId:1,Completed:"true"}}).then(function(r){    
+// List Item Updated and received response with status 204  
+console.log(r);  
+}); 
+
+// Delete List item based on ID  
+spRest.Utils.ListItem.Delete({listName:"PlaceHolderList",Id:201}).then(function(r){    
+// List Item Deleted and received response with status 200  
+console.log(r);  
+}); 
+
+```
+
 ## Below Configuration and usage for Old Util  `spRestUtils.js`
 ```js
 
