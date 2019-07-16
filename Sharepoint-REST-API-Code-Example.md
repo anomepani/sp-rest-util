@@ -16,9 +16,10 @@ console.log(r);
 });
 
 //Get all selected column Data using full URL  
+var reqUItemUrl="https://brgrp.sharepoint.com/_api/web/lists/getbytitle('PlaceHolderList')/items";
 util.Utils.ListItem  
 .GetAllItem({  
-   url:"https://brgrp.sharepoint.com/_api/web/lists/getbytitle('PlaceHolderList')/items?$select=Id,Title&$top=200"  
+   url:reqUItemUrl+"?$select=Id,Title&$top=200"  
 }).then(function(r){console.log(r);  
 //Response Received  
 });  
@@ -95,7 +96,8 @@ fetch(reqUrl+"/Files/add(url='file_name.txt',overwrite=true)",
 
 ```js
 //payload for request   
- body=  {"formValues":[{"FieldName":"Title","FieldValue":"Single Update Title with versioning__"}],bNewDocumentUpdate:true}  
+ body=  {"formValues":[{"FieldName":"Title","FieldValue":"Single Update Title with versioning__"}]
+ ,bNewDocumentUpdate:true}  
   
  //Header data for sharepoint POST Request  
  var _payloadOptions = {  
@@ -117,12 +119,39 @@ _payloadOptions.headers["X-RequestDigest"]=r.d.GetContextWebInformation.FormDige
 _payloadOptions.body=JSON.stringify(body);  
   
 // Make REST API Call to update list item without increamenting version.  
-fetch("https://brgrp.sharepoint.com/_api/web/Lists/GetbyTitle('Documents')/items(1)/ValidateUpdateListItem()"
-,_payloadOptions).then(r=>r.json()).then(r=>console.log(r))  
+fetch("https://brgrp.sharepoint.com/_api/web/Lists/GetbyTitle('Documents')/items(1)/ValidateUpdateListItem()",
+_payloadOptions).then(r=>r.json()).then(r=>console.log(r))  
 });
 
 ```
 
-Reference link : https://www.c-sharpcorner.com/article/update-a-sharepoint-list-item-without-increasing-its-item-file-version-using-res/
+Reference link : 
+https://www.c-sharpcorner.com/article/update-a-sharepoint-list-item-without-increasing-its-item-file-version-using-res/
 
+## Make Batch Request call in SharePoint Online using BatchUtils
+
+BatchUtils can be found in [Here](https://github.com/anomepani/sp-rest-util/blob/master/BatchUtils.ts)
+
+Here rootUrl required to Generate Request Digest Token as batch Request is POST request.
+```js
+var arr=["https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(212)", "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(213)", "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(214)"];
+
+BatchUtils.GetBatchAll({rootUrl:"https://brgrp.sharepoint.com",
+batchUrls:arr}).then(r=>console.log(r))
+
+```
+You can skip rootUrl if you have already generated request digest as below.
+
+```js
+var arr=["https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(212)"
+, "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(213)"
+, "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(214)"];
+
+getRequestDigest("https://brgrp.sharepoint.com").then(r=>{
+
+BatchUtils.GetBatchAll({rootUrl:"https://brgrp.sharepoint.com",
+batchUrls:arr,FormDigestValue: r.d.GetContextWebInformation.FormDigestValue}).then(r=>console.log(r))
+});
+
+```
 
