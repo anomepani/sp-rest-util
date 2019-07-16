@@ -59,15 +59,35 @@ console.log(r);
 }); 
 ```
 
+Reference link : https://www.c-sharpcorner.com/article/easy-sharepoint-listitem-crud-operation-using-rest-api-wrapper/
+
+## Utility method for getting RequestDigest for POST Request
+
+```js
+var getRequestDigest=(rootUrl)=>{
+var _payloadOptions = {  method: "POST", 
+                headers: {  credentials: "include",  Accept: "application/json; odata=verbose"
+                ,"Content-Type": "application/json; odata=verbose" }  
+            };  
+  
+//RequestDigest Request
+return fetch(rootUrl+"/_api/contextinfo",_payloadOptions).then(r=>r.json())
+}
+```
+
 ## Upload or Create txt file in SharePoint Document Library
 
 ```js
+//Get Digest first then create txt file
+getRequestDigest("https://brgrp.sharepoint.com").then (r=>{
+//Received Request Digest
 var reqUrl="https://brgrp.sharepoint.com/_api/web/GetFolderByServerRelativeUrl('/Shared Documents')"
 fetch(reqUrl+"/Files/add(url='file_name.txt',overwrite=true)",
 {method:"POST",headers:
 {accept:"application/json;odata=verbose",
-"Content-Type":"application/json;odata=verbose","X-RequestDigest":temp2}
+"Content-Type":"application/json;odata=verbose","X-RequestDigest":r.d.GetContextWebInformation.FormDigestValue }
 ,body:"Content Of Text File"}).then(r=>console.log(r))
+})
 ```
 
 ## Update A SharePoint List Item Without Increasing Its Item File Version Using Rest API
