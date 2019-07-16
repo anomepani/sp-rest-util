@@ -135,7 +135,9 @@ BatchUtils can be found in [Here](https://github.com/anomepani/sp-rest-util/blob
 Here rootUrl required to Generate Request Digest Token as batch Request is POST request.
 
 ```js
-var arr=["https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(212)", "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(213)", "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(214)"];
+var arr=["https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(212)"
+, "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(213)"
+, "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(214)"];
 
 BatchUtils.GetBatchAll({rootUrl:"https://brgrp.sharepoint.com",
 batchUrls:arr}).then(r=>console.log(r))
@@ -153,6 +155,42 @@ getRequestDigest("https://brgrp.sharepoint.com").then(r=>{
 BatchUtils.GetBatchAll({rootUrl:"https://brgrp.sharepoint.com",
 batchUrls:arr,FormDigestValue: r.d.GetContextWebInformation.FormDigestValue}).then(r=>console.log(r))
 });
+
+```
+
+## SharePoint Batch API for POST ADD/UPDATE/DELETE List Item 
+
+SharePoint Batch API is very powerful and useful for making multiple request to single request.
+This BatchUtils Support ADD/UPDATE/DELETE Operation, it can be combined in single batch Requests.
+```js
+
+// Prepare collection of request with requestUrl and payload data.
+var arr=[{
+reqUrl:"https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(212)"
+,action:"UPDATE",
+data:{__metadata:{type:"SP.Data.PlaceHolderListListItem"},Title:"Update Article_1"}},
+{
+reqUrl:"https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(213)"
+,action:"UPDATE",
+data:{__metadata:{type:"SP.Data.PlaceHolderListListItem"},Title:"Update Article_2"}},
+{
+reqUrl:"https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(214)"
+,action:"UPDATE",
+data:{__metadata:{type:"SP.Data.PlaceHolderListListItem"},Title:"Update Article_3"}},
+{
+reqUrl:"https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items"
+,action:"ADD",
+data:{__metadata:{type:"SP.Data.PlaceHolderListListItem"},Title:"Add Article_1"}}
+,{
+reqUrl:"https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(215)"
+,action:"DELETE"}];
+
+getRequestDigest().then(r=>{
+
+BatchUtils.PostBatchAll({rootUrl:"https://brgrp.sharepoint.com",
+batchUrls:arr,FormDigestValue: r.d.GetContextWebInformation.FormDigestValue}).then(r=>console.log(r))
+})
+
 
 ```
 
