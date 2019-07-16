@@ -34,27 +34,27 @@ util.Utils.ListItem.GetAllItem(
 });  
 
 // Get List Item By Id  
-spRest.Utils.ListItem.GetItemById({listName:"PlaceHolderList",Id:201}).then(function(r){    
+util.Utils.ListItem.GetItemById({listName:"PlaceHolderList",Id:201}).then(function(r){    
 console.log(r);    
 // Response received.   
 });
 
 // Add ListItem to Sharepoint List  
-spRest.Utils.ListItem.Add({listName:"PlaceHolderList"
+util.Utils.ListItem.Add({listName:"PlaceHolderList"
 ,data:{Title:"New Item Created For Demo",UserId:1,Completed:"true"}}).then(function(r){    
 console.log(r);    
 // Added New List item response received with newly created item  
 }); 
 
 // Update List item based on ID with new data in SharePoint List  
-spRest.Utils.ListItem.Update({listName:"PlaceHolderList",Id:201
+util.Utils.ListItem.Update({listName:"PlaceHolderList",Id:201
 ,data:{Title:"Updated List Item",UserId:1,Completed:"true"}}).then(function(r){    
 // List Item Updated and received response with status 204  
 console.log(r);  
 }); 
 
 // Delete List item based on ID  
-spRest.Utils.ListItem.Delete({listName:"PlaceHolderList",Id:201}).then(function(r){    
+util.Utils.ListItem.Delete({listName:"PlaceHolderList",Id:201}).then(function(r){    
 // List Item Deleted and received response with status 200  
 console.log(r);  
 }); 
@@ -128,11 +128,12 @@ _payloadOptions).then(r=>r.json()).then(r=>console.log(r))
 Reference link : 
 https://www.c-sharpcorner.com/article/update-a-sharepoint-list-item-without-increasing-its-item-file-version-using-res/
 
-## Make Batch Request call in SharePoint Online using BatchUtils
+## Make Batch Request call in SharePoint Online using BatchUtils for all Get Operation
 
 BatchUtils can be found in [Here](https://github.com/anomepani/sp-rest-util/blob/master/BatchUtils.ts)
 
 Here rootUrl required to Generate Request Digest Token as batch Request is POST request.
+
 ```js
 var arr=["https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(212)", "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(213)", "https://brgrp.sharepoint.com/_api/Lists/Getbytitle('PlaceHolderList')/items(214)"];
 
