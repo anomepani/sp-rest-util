@@ -7,10 +7,10 @@ As I have used `fetch` API which is not available in IE11 browser so you can use
 ## Sharepoint 2013/2016/2019/Online List Item CRUD Operation
 
 ```js
-var spRest=new SPRest("https://brgrp.sharepoint.com");
+var util=new SPRest("https://brgrp.sharepoint.com");
 
 // Get All Item from List item  
-spRest.Utils.ListItem.GetAllItem({listName:"PlaceHolderList"}).then(function(r){  
+util.Utils.ListItem.GetAllItem({listName:"PlaceHolderList"}).then(function(r){  
 console.log(r);  
 // Response received. TODO bind record to table or somewhere else.  
 });
