@@ -140,6 +140,41 @@ var BatchUtils = (() => {
             return JSON.parse(result);
         });
     }
+/**
+ * Custom Batch Response Parser with Request status code
+ * @param batchResponse 
+ */
+    function customBatchResponseParser(batchResponse) {
+        var batchResults = [];
+        var lastStatusCode = "";
+        batchResponse.split("\r\n").forEach(function (i) {
+            //Creating parser for Http Status Code
+            if (i.indexOf("HTTP/1.1 ") > -1) {
+                console.log(i)
+                //lastRequest=i.split("HTTP/1.1")[1].split(" ")[0]
+                //alert(i.split("HTTP/1.1")[1].split(" ")[1])
+                lastStatusCode = i.split("HTTP/1.1 ")[1].split(" ")[0];
+                batchResults.push({
+                    statusCode: lastStatusCode,
+                    result: []
+                })
+            }
+            if (lastStatusCode === "200" && i.indexOf("{") != -1) {
+                try {
+                    if (typeof JSON.parse(i) == "object") {
+                        batchResults[batchResults.length - 1].result = JSON.parse(i);
+                    }
+                } catch (ex) { /*adding the try catch loop for edge cases where the line contains a { but is not a JSON object*/ }
+            } else {
+    
+                //statusCodes.push({statusCode:lastRequest,result:[]})  
+    
+            }
+    
+    
+        });
+        return batchResults;
+    }
     /**
      * Copied grep function from jQuery JavaScript Library v1.11.3
      * @param elems 
