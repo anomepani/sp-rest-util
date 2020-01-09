@@ -2,11 +2,17 @@
     "compilerOptions": {
         "target": "es5",
         "strict": false,
-       //"module": "esnext", 
+       //"module": "ES6", 
        "module": "commonjs",
        "moduleResolution": "classic",
-        "watch": true,
+        "watch": true,"lib": [
+            "es5",
+            "es6",
+            "dom",
+            "es2015.collection"
+          ],
     
     },
+    
     "compileOnSave": true
 }
