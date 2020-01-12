@@ -83,9 +83,9 @@ export const SPUpdate = ({ url, payload = {} }) => {
 
 /**
   * Delete Request with Request Digest
-  * Example  : SPDelete({url:"https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items(3)"}).then(r=>console.log(r))
+  * Example  : SPDelete("https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items(3)").then(r=>console.log(r))
   */
-export const SPDelete = ({ url }) => {
+export const SPDelete = (url) => {
     let hdrs = {
         "IF-MATCH": "*",
         "X-HTTP-Method": "DELETE"
