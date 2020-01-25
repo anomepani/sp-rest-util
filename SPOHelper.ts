@@ -45,9 +45,9 @@ export const SPGet = url => {
     let headers = copyObj(_headers);
     return GetJson(url, { headers }); //BaseClient(url, { headers }).then(r => r.json());
 };
-const _Post = ({ url, payload = {}, hdrs = {} }) => {
+const _Post = ({ url, payload = {}, hdrs = {},isBlobOrArrayBuffer=false }) => {
     let headers = MergeObj(_headers, hdrs);//Object.assign({}, _headers, hdrs)// JPS(JSFY(_headers));
-    var req = BaseClient(url, { method: "POST", body: JSFY(payload), headers });
+    var req = BaseClient(url, { method: "POST", body: isBlobOrArrayBuffer?payload:JSFY(payload), headers });
     //Skip Conversion of Json for Update and Delete Request
     if (headers["IF-MATCH"]) return req.then(r => r);
     //Changes required in future if we change httpclient
@@ -61,13 +61,32 @@ const _Post = ({ url, payload = {}, hdrs = {} }) => {
    * Example  : SPPost({url:"https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items",payload:{Title :"POST test",Number:123}}).then(r=>console.log(r))
   */
 export const SPPost = async ({ url, payload = {}, hdrs = {} }) => {
-    let headers = copyObj(_headers)//Object.assign({}, _headers)// JPS(JSFY(_headers));
     let digest = await GetDigest(url);
     // hdrs=Object.assign({},hdrs);
     hdrs["X-RequestDigest"] = digest.FormDigestValue;
     return _Post({ url, hdrs, payload });
 };
 
+/**
+  * Add attachment using SPFileUpload metod with payload Blob type
+  * SPFileUpload({url:"https://tenant.sharepoint.com/_api/Lists/GetByTitle('SPOList')/items(1)//AttachmentFiles/ add(FileName='abc3.txt') ",payload:new Blob(["This is text"],{type:"text/plain"})}).then(r=>console.log(r))
+  */
+export const SPFileUpload = async ({ url, payload = {}, hdrs = {} }) => {
+    let digest = await GetDigest(url);
+    // hdrs=Object.assign({},hdrs);
+    hdrs["X-RequestDigest"] = digest.FormDigestValue;
+    return _Post({ url, hdrs, payload,isBlobOrArrayBuffer:true });
+};
+var SPMultiFileUpload= async ({ url, payload = {}, hdrs = {}, files=[] }) => {
+    let digest = await GetDigest(url);
+   // var promiseAll=[];
+  
+    // hdrs=Object.assign({},hdrs);
+    hdrs["X-RequestDigest"] = digest.FormDigestValue;
+
+    var promiseAll= files.map(i=>_Post({ url: `${url}add(FileName='${i.fileName}')`, hdrs, payload:i.data,isBlobOrArrayBuffer:true }))
+    return Promise.all(promiseAll);
+};
 /**
   * Update Request with Request Digest
    * Example  : SPUpdate({url:"https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items(1)",payload:{Title :"POST test update",Number:1234}}).then(r=>console.log(r))
