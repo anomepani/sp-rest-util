@@ -7,18 +7,23 @@
 const CL = console.log;
 
 /**
+ * Check isObject type is Json
+ * Reference from : https://stackoverflow.com/questions/11182924/how-to-check-if-javascript-object-is-json
+ * */
+const isObject = (obj) => obj !== undefined && obj !== null && obj.constructor == Object;
+/**
 * Base HttpClient which is wrapper of fetch.
 * @param options 
 */
-const BaseClient =(url="",{headers={},method="GET",body=undefined})=>{return fetch(url,{headers,method,body})};
+const BaseClient = (url = "", { headers = {}, method = "GET", body = undefined }) => { return fetch(url, { headers, method, body }); };
 
-const BaseRequest=(url="",{headers={},method="GET",body=undefined})=>{return BaseClient(url,{headers,method,body}).then(r=>r)}
+const BaseRequest = (url = "", { headers = {}, method = "GET", body = undefined }) => { return BaseClient(url, { headers, method, body }).then(r => r); };
 
 /**
 * Get JSON resposnse with Base HttpClient which is wrapper of fetch.
 * @param options 
 */
-const GetJson=(url="",{headers={},method="GET",body=undefined})=>{return BaseClient(url,{headers,method,body}).then(r=>r.json())}
+const GetJson = (url = "", { headers = {}, method = "GET", body = undefined }) => { return BaseClient(url, { headers, method, body }).then(r => r.json()); };
 
 /**
 *JSON.stringify short form.
@@ -36,80 +41,28 @@ const _headers = {
     credentials: "include", // credentials: 'same-origin',
     Accept: "application/json; odata=nometadata",
     "Content-Type": "application/json; odata=nometadata"
-}
-/** 
- * Get 
- * Examples SPGet("https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')").then(r=>console.log(r))
- */
-export const SPGet = url => {
-    let headers = copyObj(_headers);
-    return GetJson(url, { headers }); //BaseClient(url, { headers }).then(r => r.json());
 };
-const _Post = ({ url, payload = {}, hdrs = {},isBlobOrArrayBuffer=false }) => {
+
+let defaultDigest = { FormDigestValue: "" };
+const copyObj = (obj) => {
+    var tempObj = { ...obj };
+    //Object.assign({}, _headers)// JPS(JSFY(_headers));
+    return tempObj;
+};
+const MergeObj = (obj1, obj2) => {
+    var tempObj = { ...obj1, ...obj2 };
+    //Object.assign({}, _headers)// JPS(JSFY(_headers));
+    return tempObj;
+};
+
+const _Post = ({ url, payload = {}, hdrs = {}, isBlobOrArrayBuffer = false }) => {
     let headers = MergeObj(_headers, hdrs);//Object.assign({}, _headers, hdrs)// JPS(JSFY(_headers));
-    var req = BaseClient(url, { method: "POST", body: isBlobOrArrayBuffer?payload:JSFY(payload), headers });
+    var req = BaseClient(url, { method: "POST", body: isBlobOrArrayBuffer ? payload : JSFY(payload), headers });
     //Skip Conversion of Json for Update and Delete Request
     if (headers["IF-MATCH"]) return req.then(r => r);
     //Changes required in future if we change httpclient
     return req.then(r => r.json());
 
-};
-
-/**
-  * Post Request with Request Digest
-  * SPPost({url:"https://tenant.sharepoint.com/sites/ABCSite/_api/Lists",payload:{Title :"POC Doc", BaseTemplate: 101,Description: 'Created From SPOHelper' }}).then(r=>console.log(r))
-   * Example  : SPPost({url:"https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items",payload:{Title :"POST test",Number:123}}).then(r=>console.log(r))
-  */
-export const SPPost = async ({ url, payload = {}, hdrs = {} }) => {
-    let digest = await GetDigest(url);
-    // hdrs=Object.assign({},hdrs);
-    hdrs["X-RequestDigest"] = digest.FormDigestValue;
-    return _Post({ url, hdrs, payload });
-};
-
-/**
-  * Add attachment using SPFileUpload metod with payload Blob type
-  * SPFileUpload({url:"https://tenant.sharepoint.com/_api/Lists/GetByTitle('SPOList')/items(1)//AttachmentFiles/ add(FileName='abc3.txt') ",payload:new Blob(["This is text"],{type:"text/plain"})}).then(r=>console.log(r))
-  */
-export const SPFileUpload = async ({ url, payload = {}, hdrs = {} }) => {
-    let digest = await GetDigest(url);
-    // hdrs=Object.assign({},hdrs);
-    hdrs["X-RequestDigest"] = digest.FormDigestValue;
-    return _Post({ url, hdrs, payload,isBlobOrArrayBuffer:true });
-};
-var SPMultiFileUpload= async ({ url, payload = {}, hdrs = {}, files=[] }) => {
-    let digest = await GetDigest(url);
-   // var promiseAll=[];
-  
-    // hdrs=Object.assign({},hdrs);
-    hdrs["X-RequestDigest"] = digest.FormDigestValue;
-
-    var promiseAll= files.map(i=>_Post({ url: `${url}add(FileName='${i.fileName}')`, hdrs, payload:i.data,isBlobOrArrayBuffer:true }))
-    return Promise.all(promiseAll);
-};
-/**
-  * Update Request with Request Digest
-   * Example  : SPUpdate({url:"https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items(1)",payload:{Title :"POST test update",Number:1234}}).then(r=>console.log(r))
-  */
-export const SPUpdate = ({ url, payload = {} }) => {
-    let hdrs = {
-        "IF-MATCH": "*",
-        "X-HTTP-Method": "MERGE"
-    };
-    return SPPost({ url, hdrs, payload });
-};
-
-
-/**
-  * Delete Request with Request Digest
-  * Example  : SPDelete("https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items(3)").then(r=>console.log(r))
-  */
-export const SPDelete = (url) => {
-    let hdrs = {
-        "IF-MATCH": "*",
-        "X-HTTP-Method": "DELETE"
-    };
-    return SPPost({ url, hdrs });
 };
 
 /**
@@ -135,13 +88,71 @@ export const GetDigest = (url = "") => {
     }
     return _Post({ url });
 };
-const copyObj = (obj) => {
-    var tempObj = { ...obj };
-    //Object.assign({}, _headers)// JPS(JSFY(_headers));
-    return tempObj;
-}
-const MergeObj = (obj1, obj2) => {
-    var tempObj = { ...obj1, ...obj2 };
-    //Object.assign({}, _headers)// JPS(JSFY(_headers));
-    return tempObj;
-}
+
+/** 
+ * Get 
+ * Examples SPGet("https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')").then(r=>console.log(r))
+ */
+export const SPGet = url => {
+    let headers = copyObj(_headers);
+    return GetJson(url, { headers }); //BaseClient(url, { headers }).then(r => r.json());
+};
+
+/**
+  * Post Request with Request Digest
+  * SPPost({url:"https://tenant.sharepoint.com/sites/ABCSite/_api/Lists",payload:{Title :"POC Doc", BaseTemplate: 101,Description: 'Created From SPOHelper' }}).then(r=>console.log(r))
+   * Example  : SPPost({url:"https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items",payload:{Title :"POST test",Number:123}}).then(r=>console.log(r))
+  */
+export const SPPost = async ({ url, payload = {}, hdrs = {}, digest = defaultDigest, isBlobOrArrayBuffer = false }) => {
+    //If Digest is null or undefined then request for new digest otherwise pass digest as it is
+    ///NEED TO TEST Below logic
+
+    if (!digest || (isObject(digest) && !digest.FormDigestValue))
+        digest = await GetDigest(url);
+
+    hdrs["X-RequestDigest"] = digest.FormDigestValue;
+    return _Post({ url, hdrs, payload, isBlobOrArrayBuffer });
+};
+
+/**
+  * Add attachment using SPFileUpload metod with payload Blob type
+  * SPFileUpload({url:"https://tenant.sharepoint.com/_api/Lists/GetByTitle('SPOList')/items(1)//AttachmentFiles/ add(FileName='abc3.txt') ",payload:new Blob(["This is text"],{type:"text/plain"})}).then(r=>console.log(r))
+  */
+export const SPFileUpload = async ({ url, payload = {}, hdrs = {}, digest = defaultDigest }) => {
+    return SPPost({ isBlobOrArrayBuffer: true, url, hdrs, digest, payload });
+};
+export const SPMultiFileUpload =  ({ url, payload = {}, hdrs = {}, files = [], digest = defaultDigest }) => {
+
+    var promiseAll = files.map(async (i) => {
+        //TODO Encode/decode filename
+        return await SPFileUpload(
+            {
+                url: `${url}add(FileName='${i.fileName}')`
+                , payload: i.data, digest
+            });
+    });
+
+    return promiseAll;
+};
+/**
+  * Update Request with Request Digest
+   * Example  : SPUpdate({url:"https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items(1)",payload:{Title :"POST test update",Number:1234}}).then(r=>console.log(r))
+  */
+export const SPUpdate = ({ url, payload = {}, digest = defaultDigest }) => {
+    let hdrs = {
+        "IF-MATCH": "*",
+        "X-HTTP-Method": "MERGE"
+    };
+    return SPPost({ url, hdrs, payload, digest });
+};
+/**
+  * Delete Request with Request Digest
+  * Example  : SPDelete("https://tenant.sharepoint.com/sites/ABCSite/_api/Lists/getbytitle('SPO List')/items(3)").then(r=>console.log(r))
+  */
+export const SPDelete = (url, digest = defaultDigest) => {
+    let hdrs = {
+        "IF-MATCH": "*",
+        "X-HTTP-Method": "DELETE"
+    };
+    return SPPost({ url, hdrs, digest });
+};
