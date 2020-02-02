@@ -138,7 +138,7 @@ var i=files[j]
         //TODO Encode/decode filename
         var abc= await SPFileUpload(
             {
-                url: `${url}add(FileName='${i.fileName}')`
+                url: `${url}add(FileName='${i.fileName}',overwrite='true')`
                 , payload: i.data, digest
             });
 
