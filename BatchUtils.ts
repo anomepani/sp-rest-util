@@ -214,7 +214,8 @@ var BatchUtils = (() => {
 
             return fetch(`${rootUrl}/_api/contextinfo`, {
                 method: "POST",
-                "headers": { "Accept": "application/json;odata=verbose", credentials: "include", }
+                "headers": { "Accept": "application/json;odata=verbose" }, 
+                credentials: "include"
             }).then(r => r.json()).then(r => {
                 return internalBatch({ FormDigestValue: r.d.GetContextWebInformation.FormDigestValue, rootUrl, batchUrls })
 
@@ -228,7 +229,8 @@ var BatchUtils = (() => {
 
             return fetch(`${rootUrl}/_api/contextinfo`, {
                 method: "POST",
-                "headers": { "Accept": "application/json;odata=verbose", credentials: "include", }
+                "headers": { "Accept": "application/json;odata=verbose"}, 
+                credentials: "include"
             }).then(r => r.json()).then(r => {
                 return internalPostBatch({ FormDigestValue: r.d.GetContextWebInformation.FormDigestValue, rootUrl, batchUrls })
 
@@ -261,14 +263,14 @@ var BatchUtils = (() => {
         console.log("==========================================================")
         console.log(batchRequestBody)
         console.log("==========================================================")
-        var requestHeaders = {
-            credentials: "include",
+        var requestHeaders = {            
             'X-RequestDigest': FormDigestValue, //r.d.GetContextWebInformation.FormDigestValue,
             'Content-Type': `multipart/mixed; boundary="batch_${boundryString}"`
         };
         return fetch(`${rootUrl}/_api/$batch`, {
             method: "POST",
             headers: requestHeaders,
+            credentials: "include",
             body: batchRequestBody
         }).then(r => r.text()).then(r => {
             //Convert the text response to an array containing JSON objects of the results
@@ -301,14 +303,14 @@ var BatchUtils = (() => {
 
         //Make the REST API call to the _api/$batch endpoint with the batch data
 
-        var requestHeaders = {
-            credentials: "include",
+        var requestHeaders = {            
             'X-RequestDigest': FormDigestValue, //r.d.GetContextWebInformation.FormDigestValue,
             'Content-Type': `multipart/mixed; boundary="batch_${boundryString}"`
         };
         return fetch(`${rootUrl}/_api/$batch`, {
             method: "POST",
             headers: requestHeaders,
+            credentials: "include",
             body: batchRequestBody
         }).then(r => r.text()).then(r => {
             //Convert the text response to an array containing JSON objects of the results
