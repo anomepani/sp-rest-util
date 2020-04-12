@@ -27,7 +27,7 @@ var BatchUtils = (() => {
         // create the changeset
         for (let i = 0; i < items.length; i++) {
             item = items[i].data;
-            //action=items[i].action;
+            action=items[i].action;
             //TODO -Need to test for different action
             endpoint = items[i].reqUrl;
             batchContents.push("--changeset_" + changeSetId);
